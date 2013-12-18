@@ -54,7 +54,7 @@ Installation
 		EnableRemoteCommands=1
 		UnsafeUserParameters=1
 		UserParameter = system.discovery[*],%systemroot%\system32\cscript.exe /nologo /T:30 "<zabbix_script_path>\zabbix_mssql_discovery.js" "$1"
-		UserParameter = mssql.version[*],%systemroot%\system32\cscript.exe /nologo /T:30  "<zabbix_script_path>\zabbix_mssql_discovery.js"
+		UserParameter = mssql.version[*],%systemroot%\system32\cscript.exe /nologo /T:30  "<zabbix_script_path>\zabbix_mssql_discovery.js" "$1" "$2"
 
 5. Import **zbx-windows-mssql.xml** file into Zabbix.
 6. Associate **ZBX-WINDOWS-MSSQL** template to the host.
