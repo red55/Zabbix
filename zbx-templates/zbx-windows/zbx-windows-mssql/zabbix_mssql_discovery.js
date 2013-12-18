@@ -356,6 +356,5 @@ try
 }
 catch (e)
 {
-WScript.Echo(e.message);
     WScript.Quit(e.Code);
 }
