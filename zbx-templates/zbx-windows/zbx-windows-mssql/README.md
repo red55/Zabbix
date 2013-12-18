@@ -1,7 +1,7 @@
 ZBX-WINDOWS-MSSQL
 =================
 
-This template use Zabbix agent to discover and manage SQL server.
+This template use Zabbix agent to discover and manage SQL server. Support for multiply SQL instances.No SQL2000 support yet. Tested on SQL 2012 and SQL 2008. Should work with SQL 2005 also.
 
 Items
 -----
@@ -48,14 +48,13 @@ Installation
 ------------
 
 1. Install the Zabbix agent on your host or download my automated package [`Zabbix agent`](https://github.com/jjmartres/Zabbix/tree/master/zbx-agent)
-2. Install [`zabbix_win_system_discovery.vbs`](https://github.com/jjmartres/Zabbix/tree/master/zbx-templates/zbx-windows/zbx-windows-envmon/zabbix_win_system_discovery.vbs) in the script directory of your Zabbix agent
-3. Install [`zabbix_mssql_version.vbs`](https://github.com/jjmartres/Zabbix/tree/master/zbx-templates/zbx-windows/zbx-windows-mssql/zabbix_mssql_version.vbs) in the script directory of your Zabbix agent
-4. Add the following line to your Zabbix agent configuration file. Note that `<zabbix_script_path>` is your Zabbix agent script path :
+2. Install [`zabbix_mssql_discovery.js`](https://github.com/red55/Zabbix/blob/master/zbx-templates/zbx-windows/zbx-windows-mssql/zabbix_mssql_discovery.js) in the script directory of your Zabbix agent
+3. Add the following line to your Zabbix agent configuration file. Note that `<zabbix_script_path>` is your Zabbix agent script path :
 
 		EnableRemoteCommands=1
 		UnsafeUserParameters=1
-		UserParameter = system.discovery[*],%systemroot%\system32\cscript.exe /nologo /T:30 "<zabbix_script_path>\zabbix_win_system_discovery.vbs" "$1"
-		UserParameter = mssql.version[*],%systemroot%\system32\cscript.exe /nologo /T:30  "<zabbix_script_path>\zabbix_mssql_version.vbs"
+		UserParameter = system.discovery[*],%systemroot%\system32\cscript.exe /nologo /T:30 "<zabbix_script_path>\zabbix_mssql_discovery.js" "$1"
+		UserParameter = mssql.version[*],%systemroot%\system32\cscript.exe /nologo /T:30  "<zabbix_script_path>\zabbix_mssql_discovery.js"
 
 5. Import **zbx-windows-mssql.xml** file into Zabbix.
 6. Associate **ZBX-WINDOWS-MSSQL** template to the host.
@@ -65,8 +64,7 @@ Installation
 This template was tested for Zabbix 2.0.0 and higher.
 
 ##### [Zabbix agent](http://www.zabbix.com) 2.0.x
-##### [`zabbix_mssql_version.vbs`](https://github.com/jjmartres/Zabbix/tree/master/zbx-templates/zbx-windows/zbx-windows-envmon/zabbix_mssql_version.vbs) 1.0
-##### [`zabbix_win_system_discovery.vbs`](https://github.com/jjmartres/Zabbix/tree/master/zbx-templates/zbx-windows/zbx-windows-envmon/zabbix_win_system_discovery.vbs) 1.0
+##### [`zabbix_mssql_discovery.js`](https://github.com/red55/Zabbix/blob/master/zbx-templates/zbx-windows/zbx-windows-mssql/zabbix_mssql_discovery.js) 1.0
 
 License
 -------
