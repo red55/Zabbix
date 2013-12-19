@@ -1,7 +1,7 @@
 ZBX-WINDOWS-MSSQL
 =================
 
-This template use Zabbix agent to discover and manage SQL server. Support for multiply SQL instances.No SQL2000 support yet. Tested on SQL 2012 and SQL 2008. Should work with SQL 2005 also.
+This template use Zabbix agent to discover and manage SQL server. Support for multiply SQL instances. Tested on SQL 2012, 2008, 2000. Should work with SQL 2005 also.
 
 Items
 -----
@@ -48,8 +48,9 @@ Installation
 ------------
 
 1. Install the Zabbix agent on your host or download my automated package [`Zabbix agent`](https://github.com/jjmartres/Zabbix/tree/master/zbx-agent)
-2. Install [`zabbix_mssql_discovery.js`](https://github.com/red55/Zabbix/blob/master/zbx-templates/zbx-windows/zbx-windows-mssql/zabbix_mssql_discovery.js) in the script directory of your Zabbix agent
-3. Add the following line to your Zabbix agent configuration file. Note that `<zabbix_script_path>` is your Zabbix agent script path :
+2. If you'd like to monitor SQL2000 install SQL Server 2000 WMI Admin Provider. Located at X86\OTHER\WMI on installation CD.
+3. Install [`zabbix_mssql_discovery.js`](https://github.com/red55/Zabbix/blob/master/zbx-templates/zbx-windows/zbx-windows-mssql/zabbix_mssql_discovery.js) in the script directory of your Zabbix agent
+4. Add the following line to your Zabbix agent configuration file. Note that `<zabbix_script_path>` is your Zabbix agent script path :
 
 		EnableRemoteCommands=1
 		UnsafeUserParameters=1
