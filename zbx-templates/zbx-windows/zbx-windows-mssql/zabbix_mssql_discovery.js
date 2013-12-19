@@ -1,8 +1,5 @@
 'using strict';
 
-var HKEY_LOCAL_MACHINE = 0x80000002;
-var REG_HKEY_SOFTWARE_MSSQL = "SOFTWARE\\Microsoft\\#1\\MSSQLServer\\Parameters";
-var REG_SZ = 1;
 var VER_SQL2000 ="80";
 var VER_SQL2005 = "90";
 var VER_SQL2008 = "100";
@@ -10,7 +7,7 @@ var VER_SQL2008R2 = "105";
 var VER_SQL2012 = "110";
 var WMI_CIMV2 = "winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\cimv2";
 var WMI_SQLSERVER = 'winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\Microsoft\\SqlServer\\';
-var WMI_STDREG = 'winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\default:StdRegProv';
+var WMI_SQLSERVER_2000 = "winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\MicrosoftSQLServer"
 var SQL_DEFAULT_INSTANCE = "MSSQLSERVER";
 
 var Exception = function (m, c) 
@@ -21,47 +18,16 @@ var Exception = function (m, c)
     return this;
 }
 
-function regGetStringValue(hk, key, v)
+var __ComputerName = null;
+function GetComputerName()
 {
-    var reg = WMIRoot(WMI_STDREG);
-    var objMethod = reg.Methods_.Item("GetStringValue");
-    var objInParam = objMethod.InParameters.SpawnInstance_();
-    objInParam.hDefKey = hk;
-    objInParam.sSubKeyName = key;
-    objInParam.sValueName = v;
-
-    var objOutParam = reg.ExecMethod_(objMethod.Name, objInParam);    
-    var rv = "";
-
-    if (0 != objOutParam.Properties_.Item("ReturnValue").Value)
+    if (null == __ComputerName)
     {
-        throw new Exception("Reg.GetStringValue Failed", objOutParam.Properties_.Item("ReturnValue").Value);
+        var net = new ActiveXObject('WScript.Network');
+        __ComputerName = net.computerName;
     }
 
-    rv = objOutParam.Properties_.Item("sValue").Value;
-
-    return rv;
-}
-
-function regEnumValues(hk, key)
-{
-    var reg = WMIRoot(WMI_STDREG);
-    var objMethod = reg.Methods_.Item("EnumValues");
-    var objInParam = objMethod.InParameters.SpawnInstance_();
-    objInParam.hDefKey = hk;
-    objInParam.sSubKeyName = key;
-
-    var objOutParam = reg.ExecMethod_(objMethod.Name, objInParam);    
-    var rnames = [], rtypes = [];
-
-    if (0 != objOutParam.Properties_.Item("ReturnValue").Value)
-    {
-        throw new Exception("Reg.EnumValues Failed", objOutParam.Properties_.Item("ReturnValue").Value);
-        
-    }
-    rnames = objOutParam.Properties_.Item("sNames").Value.toArray();
-    rtypes = objOutParam.Properties_.Item("Types").Value.toArray()
-    return { names: rnames, types: rtypes };
+    return __ComputerName;
 }
 
 var __wmiCache = [];
@@ -182,33 +148,19 @@ var SQLServerInstance = function (n, p)
         if (null == this._edt)
         {
             if (VER_SQL2000 == this.Version())
-            {    
-                var key = this.IsDefaultInstance() ? REG_HKEY_SOFTWARE_MSSQL.replace("#1", "MSSQLServer") : 
-                    REG_HKEY_SOFTWARE_MSSQL.replace("#1", "Microsoft SQL Server\\" + this.InstanceSuffix());
-                var vals = [], types = [];
-                var o = regEnumValues(HKEY_LOCAL_MACHINE, key);
-                var errLog = "";
+            {                
 
-                for (var i = 0; i < o.types.length; i++)
-                {
-                    if (REG_SZ == o.types[i])
-                    {
-                        var name = o.names[i];
-
-                        var val = regGetStringValue(HKEY_LOCAL_MACHINE, key, name)
-
-                        if (val.substring(0, 2) == "-e")
-                        {
-                            errLog = val.substring(2, val.length);
-                            break;
-                        }
-                    }
-                }
+                var v = WMIRoot(WMI_SQLSERVER_2000 + ":MSSQL_SQLServer.Name='" + (this.IsDefaultInstance() ? "(LOCAL)" : GetComputerName() + "\\" + this.InstanceSuffix()) + "'");
                 
-                if (0 == errLog.length)
+
+                var m = v.VersionString.match (/^(.*Edition.*)$/gm);
+
+                if (null == m)
                 {
-                    throw new Exception("ERRORLOG location not found");
+                    throw new Exception ("Can not query for SKUNAME");
                 }
+
+                this._edt = m[0].replace("\t", "");
             }
             else
             {
@@ -222,13 +174,13 @@ var SQLServerInstance = function (n, p)
                     
                     if ("SKUNAME" == i.PropertyName)
                     {
-                        _edt = i.PropertyStrValue;
+                        this._edt = i.PropertyStrValue;
                         break;
                     }
                 }
             }
         }
-        return _edt;
+        return this._edt;
     }
 
     this.FullName = function ()
@@ -267,23 +219,36 @@ var SQLServerInstance = function (n, p)
         if (null == this._dbs)
         {
             this._dbs = [];
-            
-            var q = WMIExec(WMI_CIMV2, "select * from meta_class where __CLASS Like 'Win32_PerfFormattedData_" + this.InstanceName().replace("\$", '') + "%Databases%'")
-
-            for (; !q.atEnd() ; q.moveNext())
+            if (VER_SQL2000 == this.Version())
             {
-                var qq = WMIExec(WMI_CIMV2, "select * from " + q.item().Path_.Class);
+                var e = WMIExec(WMI_SQLSERVER_2000, "Select Name from MSSQL_Database Where SQLServerName like '%"+ 
+                    (this.IsDefaultInstance() ? "(LOCAL)" : this.InstanceSuffix()) + "%'");
 
-                for (; !qq.atEnd() ; qq.moveNext())
+                while (!e.atEnd())
                 {
-                    var j = qq.item();
-                    if ("_Total" == j.Name)
-                    {
-                        continue
-                    };
-                    this._dbs.push(j.Name);
+                    this._dbs.push(e.item().Name);
+                    e.moveNext();
                 }
-            }    
+            }
+            else
+            {
+                 var q = WMIExec(WMI_CIMV2, "select * from meta_class where __CLASS Like 'Win32_PerfFormattedData_" + this.InstanceName().replace("\$", '') + "%Databases%'")
+
+                for (; !q.atEnd() ; q.moveNext())
+                {
+                    var qq = WMIExec(WMI_CIMV2, "select * from " + q.item().Path_.Class);
+
+                    for (; !qq.atEnd() ; qq.moveNext())
+                    {
+                        var j = qq.item();
+                        if ("_Total" == j.Name)
+                        {
+                            continue
+                        };
+                        this._dbs.push(j.Name);
+                    }
+                }
+            }
         }
 
         return this._dbs;
@@ -398,7 +363,7 @@ function ListSQLInstances()
   
 try
 {
-    
+
     if (WScript.Arguments.length < 1) {
         throw new Exception("Invalid parameters");
     }
