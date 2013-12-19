@@ -1,7 +1,7 @@
 'using strict';
 
 var HKEY_LOCAL_MACHINE = 0x80000002;
-var STR_HKEY_SOFTWARE = "SOFTWARE\Microsoft\MSSQLServer\MSSQLServer\Parameters";
+var REG_HKEY_SOFTWARE_MSSQL = "SOFTWARE\\Microsoft\\#1\\MSSQLServer\\Parameters";
 var REG_SZ = 1;
 var VER_SQL2000 ="80";
 var VER_SQL2005 = "90";
@@ -10,6 +10,8 @@ var VER_SQL2008R2 = "105";
 var VER_SQL2012 = "110";
 var WMI_CIMV2 = "winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\cimv2";
 var WMI_SQLSERVER = 'winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\Microsoft\\SqlServer\\';
+var WMI_STDREG = 'winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\default:StdRegProv';
+var SQL_DEFAULT_INSTANCE = "MSSQLSERVER";
 
 var Exception = function (m, c) 
 {
@@ -19,16 +21,66 @@ var Exception = function (m, c)
     return this;
 }
 
+function regGetStringValue(hk, key, v)
+{
+    var reg = WMIRoot(WMI_STDREG);
+    var objMethod = reg.Methods_.Item("GetStringValue");
+    var objInParam = objMethod.InParameters.SpawnInstance_();
+    objInParam.hDefKey = hk;
+    objInParam.sSubKeyName = key;
+    objInParam.sValueName = v;
+
+    var objOutParam = reg.ExecMethod_(objMethod.Name, objInParam);    
+    var rv = "";
+
+    if (0 != objOutParam.Properties_.Item("ReturnValue").Value)
+    {
+        throw new Exception("Reg.GetStringValue Failed", objOutParam.Properties_.Item("ReturnValue").Value);
+    }
+
+    rv = objOutParam.Properties_.Item("sValue").Value;
+
+    return rv;
+}
+
+function regEnumValues(hk, key)
+{
+    var reg = WMIRoot(WMI_STDREG);
+    var objMethod = reg.Methods_.Item("EnumValues");
+    var objInParam = objMethod.InParameters.SpawnInstance_();
+    objInParam.hDefKey = hk;
+    objInParam.sSubKeyName = key;
+
+    var objOutParam = reg.ExecMethod_(objMethod.Name, objInParam);    
+    var rnames = [], rtypes = [];
+
+    if (0 != objOutParam.Properties_.Item("ReturnValue").Value)
+    {
+        throw new Exception("Reg.EnumValues Failed", objOutParam.Properties_.Item("ReturnValue").Value);
+        
+    }
+    rnames = objOutParam.Properties_.Item("sNames").Value.toArray();
+    rtypes = objOutParam.Properties_.Item("Types").Value.toArray()
+    return { names: rnames, types: rtypes };
+}
+
 var __wmiCache = [];
+function WMIRoot (root)
+{
+    var wroot = __wmiCache [root];                                
+    if (typeof wroot == 'undefined')
+    {
+        wroot = __wmiCache [root] = GetObject(root);
+    }
+
+    return wroot;
+}
+
 function WMIExec(root, q)
 {
-    var WMIRoot = __wmiCache [root];
-    if (typeof WMIRoot == 'undefined')
-    {
-        WMIRoot = __wmiCache [root] = GetObject(root);
-    }
+    var wroot = WMIRoot(root);
        
-    return new Enumerator(WMIRoot.ExecQuery(q));
+    return new Enumerator(wroot.ExecQuery(q));
 }
 
 var SQLServerInstance = function (n, p)
@@ -36,7 +88,7 @@ var SQLServerInstance = function (n, p)
     var m = p.match(/^\"(.*)\"/);
     
     this._instanceName = n;
-    this._instanceNameForPerfCnts = ((n == "MSSQLSERVER") ? "SQLServer" : n);
+    this._instanceNameForPerfCnts = ((n == SQL_DEFAULT_INSTANCE) ? "SQLServer" : n);
     this.Path = null
     if (null == m)
     {
@@ -114,14 +166,49 @@ var SQLServerInstance = function (n, p)
         }
     }
 
+    this.IsDefaultInstance = function ()
+    {
+        return this.InstanceName () == SQL_DEFAULT_INSTANCE ? true : false;
+    }
+    this.InstanceSuffix = function ()
+    {
+        var n = this.InstanceName();
+        return this.IsDefaultInstance() ? "" : n.substring(n.indexOf("$") + 1, n.length);
+    }
+
     this._edt = null;
     this.Edition = function ()
     {
         if (null == this._edt)
         {
             if (VER_SQL2000 == this.Version())
-            {
+            {    
+                var key = this.IsDefaultInstance() ? REG_HKEY_SOFTWARE_MSSQL.replace("#1", "MSSQLServer") : 
+                    REG_HKEY_SOFTWARE_MSSQL.replace("#1", "Microsoft SQL Server\\" + this.InstanceSuffix());
+                var vals = [], types = [];
+                var o = regEnumValues(HKEY_LOCAL_MACHINE, key);
+                var errLog = "";
+
+                for (var i = 0; i < o.types.length; i++)
+                {
+                    if (REG_SZ == o.types[i])
+                    {
+                        var name = o.names[i];
+
+                        var val = regGetStringValue(HKEY_LOCAL_MACHINE, key, name)
+
+                        if (val.substring(0, 2) == "-e")
+                        {
+                            errLog = val.substring(2, val.length);
+                            break;
+                        }
+                    }
+                }
                 
+                if (0 == errLog.length)
+                {
+                    throw new Exception("ERRORLOG location not found");
+                }
             }
             else
             {
@@ -269,7 +356,7 @@ function DiscoverSQLInstances(instances_)
 function GetSQLInstance(instanceName)
 {
     var q = "Select Name , PathName from Win32_Service Where PathName Like '%sqlservr.exe%' and Name ='" +
-        (instanceName == "SQLServer" ? "MSSQLSERVER" : instanceName) + "'";
+        (instanceName == "SQLServer" ? SQL_DEFAULT_INSTANCE : instanceName) + "'";
 
     var services = WMIExec(WMI_CIMV2, q);
     
@@ -311,6 +398,7 @@ function ListSQLInstances()
   
 try
 {
+    
     if (WScript.Arguments.length < 1) {
         throw new Exception("Invalid parameters");
     }
@@ -352,7 +440,8 @@ try
                         break;
                 }                
             }
-    }        
+    } 
+
 }
 catch (e)
 {
