@@ -9,7 +9,7 @@ Items
   * MSSQL server edition
   * MSSQL server product
   * MSSQL server version
-  * MSSQL maximum DB size
+  * MSSQL maximum DB size for each instance
   * Connection memory
   * Granted workspace memory
   * Lock blocks
@@ -24,6 +24,7 @@ Items
   * SQL cache memory
   * Target server memory
   * Total server memory
+  * Discovery: SQL Server Instances
   * Discovery: Data file(s) size for each database
   * Discovery: Log file(s) size for each database
   * Discovery: Log file(s) used size for each database
@@ -34,6 +35,8 @@ Items
 Triggers
 --------
 
+
+  * **[DISASTER]** => Discovery: database exceed 95% of the maximum DB size for each database
   * **[HIGH]** => Discovery : database exceed 90% of the maximum DB size for each database
   * **[AVERAGE]** => Discovery : database exceed 80% of the maximum DB size for each database
   * **[WARNING]** => Discovery : database exceed 80% of the maximum DB size for each database
