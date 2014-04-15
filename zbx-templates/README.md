@@ -22,7 +22,7 @@ Templates
   * [ZBX-GANDI](https://github.com/jjmartres/Zabbix/tree/master/zbx-templates/zbx-gandi) => template to manage domain and certificate expiry from Gandi API
   * [ZBX-DRBD](https://github.com/jjmartres/Zabbix/tree/master/zbx-templates/zbx-drbd) => template to manage [DRBD](http://www.drbd.org) ressources.
   * [ZBX-VMWARE](https://github.com/jjmartres/Zabbix/tree/master/zbx-templates/zbx-vmware) => template to manage VMware vCenter (both vCSA and Windows server)
-  * [ZBX-MIKROTIK] (https://github.com/jjmartres/Zabbix/tree/master/zbx-templates/zbx-mikrotik) => template to monitor status of BGP peers for Mikrotik routers
+  * [ZBX-MIKROTIK] (https://github.com/red55/Zabbix/tree/master/zbx-templates/zbx-mikrotik) => template to monitor status of BGP peers for Mikrotik routers
 
 Requirements
 ------------
