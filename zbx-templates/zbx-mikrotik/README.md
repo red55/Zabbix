@@ -30,7 +30,7 @@ Installation
 6. Put generated DSA key pair into `/home/zabbix/.ssh` on Zabbix server itself or proxy.
 7. Run `su -c 'ssh -i /home/zabbix/.ssh/zabbix_dsa zabbix@<routerip>' -s /bin/sh zabbix` and say "yes" to store Router's public key
 8. Import [ZBX-MIKROTIK-BGP.xml](https://github.com/red55/Zabbix/blob/master/zbx-templates/zbx-mikrotik/ZBX-MIKROTIK-BGP.xml)
-9. Modify template's or host's (`{$ZBX_MKT_BGP_USER}`], [`{$ZBX_MKT_BGP_USER_IDDSA}`) macros to point it to created user and location of DSA key pair.
+9. Modify template's or host's (`{$ZBX_MKT_BGP_USER}`, `{$ZBX_MKT_BGP_USER_IDDSA}`) macros to point it to created user and location of DSA key pair.
 10. Assosiate `ZBX-MIKROTIK-BGP` with the host.
 11. Enjoy
 
