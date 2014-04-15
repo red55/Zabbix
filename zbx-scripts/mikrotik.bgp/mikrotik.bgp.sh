@@ -17,6 +17,8 @@ show_usage()
     echo "		status <peer> 	- get status of the peer"
     echo "	<user> - ssh user in Mikrotik router"
     echo "	<dsa_keyfile> - DSA key used to atuhenticate as <user>"
+    
+    exit 1
 }
 
 discover()
