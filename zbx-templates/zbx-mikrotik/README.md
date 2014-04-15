@@ -10,7 +10,7 @@ Discover
   
 Items
 -----
-  * PEER
+  * BGP peer {#PEER} Status
   
 
 Triggers
