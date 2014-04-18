@@ -286,7 +286,7 @@ function DiscoverDatabases(instances_)
             }
         }
 
-        if (i < instances_.length - 1)
+        if ((inst.Databases().length >0) && (i < instances_.length - 1))
         {
             hd += ",";
         }
