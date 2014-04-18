@@ -82,6 +82,8 @@ var SQLServerInstance = function (n, p)
         var wmiPath = "ComputerManagement";
         switch (this.Version())
         {
+            case VER_SQL2005:
+                break;
             case VER_SQL2008:
             case VER_SQL2008R2:
                 wmiPath = "ComputerManagement10"
