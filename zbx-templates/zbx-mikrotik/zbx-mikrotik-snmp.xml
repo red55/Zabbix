@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-12-09T17:40:21Z</date>
-    <groups>       
+    <date>2015-12-10T17:26:21Z</date>
+    <groups>        
         <group>
             <name>Mikrotik Devices</name>
         </group>
@@ -13,6 +13,9 @@
             <name>Template SNMP Mikrotik v. 1.0</name>
             <description/>
             <groups>
+                <group>
+                    <name>-=Dark_Sarmat templates=-</name>
+                </group>
                 <group>
                     <name>Mikrotik Devices</name>
                 </group>
@@ -615,7 +618,7 @@
                             <delay_flex/>
                             <params/>
                             <ipmi_sensor/>
-                            <data_type>3</data_type>
+                            <data_type>0</data_type>
                             <authtype>0</authtype>
                             <username/>
                             <password/>
@@ -660,7 +663,7 @@
                             <delay_flex/>
                             <params/>
                             <ipmi_sensor/>
-                            <data_type>3</data_type>
+                            <data_type>0</data_type>
                             <authtype>0</authtype>
                             <username/>
                             <password/>
