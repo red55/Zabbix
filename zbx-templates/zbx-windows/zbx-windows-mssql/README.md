@@ -59,7 +59,7 @@ Installation
 		UnsafeUserParameters=1
 		UserParameter = system.discovery[*],%systemroot%\system32\cscript.exe /nologo /T:30 "<zabbix_script_path>\zabbix_mssql_discovery.js" "$1"
 		UserParameter = mssql.version[*],%systemroot%\system32\cscript.exe /nologo /T:30  "<zabbix_script_path>\zabbix_mssql_discovery.js" "$1" "$2"
-    UserParameter = mssql.deadlocks[*],%systemroot%\system32\cmd.exe /C C:\ProgramData\zabbix\Scripts\exec-sql-cmd.bat $1 "SET NOCOUNT ON;select COUNT(*) from sys.sysprocesses where blocked > 0"
+		UserParameter = mssql.deadlocks[*],%systemroot%\system32\cmd.exe /C C:\ProgramData\zabbix\Scripts\exec-sql-cmd.bat $1 "SET NOCOUNT ON;select COUNT(*) from sys.sysprocesses where blocked > 0"
 
 5. Import **zbx-windows-mssql.xml** file into Zabbix.
 6. Associate **ZBX-WINDOWS-MSSQL** template to the host.
