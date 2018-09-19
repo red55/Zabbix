@@ -52,23 +52,25 @@ Installation
 
 1. Install the Zabbix agent on your host or download my automated package [`Zabbix agent`](https://github.com/jjmartres/Zabbix/tree/master/zbx-agent)
 2. If you'd like to monitor SQL2000 install SQL Server 2000 WMI Admin Provider. Located at X86\OTHER\WMI on installation CD.
-3. Install [`zabbix_mssql_discovery.js`](https://github.com/red55/Zabbix/blob/master/zbx-templates/zbx-windows/zbx-windows-mssql/zabbix_mssql_discovery.js) in the script directory of your Zabbix agent
+3. Install [`zabbix_mssql_discovery.js`](zabbix_mssql_discovery.js) and [`exec-sql-cmd.bat`](exec-sql-cmd.bat) into the script directory of your Zabbix agent
 4. Add the following line to your Zabbix agent configuration file. Note that `<zabbix_script_path>` is your Zabbix agent script path :
 
 		EnableRemoteCommands=1
 		UnsafeUserParameters=1
 		UserParameter = system.discovery[*],%systemroot%\system32\cscript.exe /nologo /T:30 "<zabbix_script_path>\zabbix_mssql_discovery.js" "$1"
 		UserParameter = mssql.version[*],%systemroot%\system32\cscript.exe /nologo /T:30  "<zabbix_script_path>\zabbix_mssql_discovery.js" "$1" "$2"
+    UserParameter = mssql.deadlocks[*],%systemroot%\system32\cmd.exe /C C:\ProgramData\zabbix\Scripts\exec-sql-cmd.bat $1 "SET NOCOUNT ON;select COUNT(*) from sys.sysprocesses where blocked > 0"
 
 5. Import **zbx-windows-mssql.xml** file into Zabbix.
 6. Associate **ZBX-WINDOWS-MSSQL** template to the host.
 
 ### Requirements
 
-This template was tested for Zabbix 2.0.0 and higher.
+This template was tested for Zabbix 3.4.0 and higher.
 
 ##### [Zabbix agent](http://www.zabbix.com) 2.0.x
-##### [`zabbix_mssql_discovery.js`](https://github.com/red55/Zabbix/blob/master/zbx-templates/zbx-windows/zbx-windows-mssql/zabbix_mssql_discovery.js) 1.0
+##### [`zabbix_mssql_discovery.js`](zabbix_mssql_discovery.js) 1.0
+##### [`zexec-sql-cmd.bat`](exec-sql-cmd.bat) 1.0
 
 License
 -------
